@@ -1,0 +1,14 @@
+HTTP/1.1 200 OK
+Date: Mon, 12 Jan 2015 23:31:42 GMT
+Server: Microsoft-IIS/6.0
+X-Powered-By: ASP.NET
+Pragma: no-cache
+cache-control: Thu, 01 Jan 1970 00:00:00 GMT
+Expires: no-store
+Content-Type: text/html; Charset=ISO-8859-1
+Expires: Mon, 12 Jan 2015 06:51:42 GMT
+Set-Cookie: ASPSESSIONIDCABSBADR=BNGNBJLBOHGJLMENIHPNCPCH; path=/
+Cache-control: Private
+Transfer-Encoding: chunked
+Content-Encoding: gzip
+Vary: Accept-encoding

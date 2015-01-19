@@ -1,0 +1,9 @@
+GET /loterias/loterias/megasena/megasena_pesquisa_new.asp?submeteu=sim&opcao=concurso&txtConcurso=123 HTTP/1.1
+Host: www1.caixa.gov.br
+Connection: keep-alive
+Cache-Control: max-age=0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36
+Accept-Encoding: gzip, deflate, sdch
+Accept-Language: en-US,en;q=0.8,pt-BR;q=0.6,pt;q=0.4
+Cookie: security=true; ASPSESSIONIDSAARQRBT=DENANCHAIIIHKMDFLJCGKGJG
