@@ -5,8 +5,8 @@ final class HttpHeaderField extends Object {
     private static final int CONFIG_INITIAL_LENGTH = 80;
     private static final int CONFIG_LENGTH_INCREMENT = 32;
 
-    private char[] contents;
-    private int valueOffset, valueLength;
+    private char[] fieldContents;
+    private int fieldValueOffset, fieldValueLength;
     private HttpHeaderField next, lower, higher;
 
     HttpHeaderField( byte[] buf, int off, int len ) throws HttpException {
@@ -15,9 +15,9 @@ final class HttpHeaderField extends Object {
         super();
 
         // initialize fields
-        this.contents = new char[ len ];
-        this.valueOffset = 0;
-        this.valueLength = 0;
+        this.fieldContents = new char[ len ];
+        this.fieldValueOffset = 0;
+        this.fieldValueLength = 0;
 
         // parse buffer contents
         this.parse( buf, off, len );
@@ -29,30 +29,29 @@ final class HttpHeaderField extends Object {
         int cnt;
 
         // read token from buffer
-        cnt = HttpProtocol.parseToken( buf, off, this.contents, 0, len );
-        if ( cnt < 1 || cnt >= len || buf[cnt + off] != ':' ) {
+        cnt = HttpProtocol.parseToken( buf, off, this.fieldContents, 0, len );
+        if ( cnt < 1 || cnt >= len || buf[off + cnt] != ':' ) {
             throw new HttpException("Bad Header Field Name");
         }
 
-        // save header value offset
-        this.valueOffset = cnt;
-
-        // update counters
-        cnt++;
-        off += cnt;
-        len -= cnt;
+        // save field value offset and increment counter to skip colon
+        this.fieldValueOffset = cnt++;
 
         // count whitespaces
-        cnt = HttpProtocol.countBlank( buf, off, len );
         off += cnt;
         len -= cnt;
-
-        if ( len > 0 ) {
-            cnt = HttpProtocol.parseFieldValue( buf, off, this.contents, this.valueOffset, len );
+        cnt = HttpProtocol.countBlank( buf, off, len );
+        if ( (len -= cnt) > 0 ) {
+            off += cnt;
+            cnt = HttpProtocol.parseFieldValue(
+                buf,
+                off,
+                this.fieldContents,
+                this.fieldValueOffset,
+                len
+            );
         }
 
     }
-
-    
 
 }
