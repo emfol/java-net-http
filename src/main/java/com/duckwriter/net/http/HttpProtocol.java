@@ -74,7 +74,7 @@ public final class HttpProtocol extends Object {
         }
 
         if ( s != 0 || c == ASCII_LF ) {
-            i = i > 0 ? -i : -1;
+            i = (-i) - 1;
         }
 
         return i;
