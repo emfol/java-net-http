@@ -49,7 +49,6 @@ public final class HttpProtocol extends Object {
         int i, s;
         char c;
 
-        scan:
         for ( i = 0, s = 0; i < len; ++i ) {
 
             c = (char)( 255 & buf[off + i] );
@@ -60,14 +59,14 @@ public final class HttpProtocol extends Object {
 
             if ( s > 0 ) {
                 if ( (s == 2 && c != ASCII_LF) || (s == 1 && c != ASCII_SP) ) {
-                    break scan;
+                    break;
                 }
                 s--;
             } else {
                 if ( c == ASCII_CR ) {
                     s = 2;
                 } else if ( c != ASCII_SP ) {
-                    break scan;
+                    break;
                 }
             }
 
