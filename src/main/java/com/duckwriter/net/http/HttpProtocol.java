@@ -44,6 +44,34 @@ public final class HttpProtocol extends Object {
         return ( c == ASCII_SP || c == ASCII_HT || c == ASCII_CR );
     }
 
+    public static int findEndOfLine( byte[] buf, int off, int len ) {
+
+        int i, s;
+        char c;
+
+        for ( i = 0, s = 0; i < len; i++ ) {
+            c = (char)( 255 & buf[off + i] );
+            if ( s > 0 ) {
+                if ( c == ASCII_LF ) {
+                    i--;
+                    s--;
+                }
+                break;
+            } else {
+                if ( c == ASCII_CR ) {
+                    s++;
+                }
+            }
+        }
+
+        if ( s != 0 ) {
+            i = (-i) - 1;
+        }
+
+        return i;
+
+    }
+
     public static int skipLWS( byte[] buf, int off, int len ) {
 
         int i, s;
@@ -88,12 +116,12 @@ public final class HttpProtocol extends Object {
         char c;
 
         scan:
-        for ( i = 0; i < len; ++i ) {
+        for ( i = 0; i < len; i++ ) {
             c = (char)( 255 & src[offsrc + i] );
             if ( c <= ASCII_SP || c >= ASCII_DEL ) {
                 break scan;
             }
-            for ( k = 0; k < seplen; ++k ) {
+            for ( k = 0; k < seplen; k++ ) {
                 if ( c == sep[k] ) {
                     break scan;
                 }
@@ -116,7 +144,7 @@ public final class HttpProtocol extends Object {
             return cnt;
         }
 
-        for ( i = cnt, j = 0; i < len; ++i ) {
+        for ( i = cnt, j = 0; i < len; i++ ) {
             c = (char)( 255 & src[offsrc + i] );
             
             if ( c == CR || c == SP || c == HT ) {
@@ -190,7 +218,7 @@ public final class HttpProtocol extends Object {
      * Constructors (No Instance Needed)
      */
 
-    private HttpProtocol {
+    private HttpProtocol() {
         super();
     }
 
