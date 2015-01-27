@@ -46,29 +46,24 @@ public final class HttpProtocol extends Object {
 
     public static int findEndOfLine( byte[] buf, int off, int len ) {
 
-        int i, s;
-        char c;
+        int i, state = 0;
+        char prev, curr;
 
-        for ( i = 0, s = 0; i < len; i++ ) {
-            c = (char)( 255 & buf[off + i] );
-            if ( s > 0 ) {
-                if ( c == ASCII_LF ) {
+        for ( i = 0; i < len; i++ ) {
+            curr = (char)( 255 & buf[off + i] );
+            if ( state != 0 ) {
+                if ( prev == ASCII_CR && curr == ASCII_LF ) {
                     i--;
-                    s--;
+                    state--;
                 }
                 break;
-            } else {
-                if ( c == ASCII_CR ) {
-                    s++;
-                }
+            } else if ( curr == ASCII_CR || curr == ASCII_LF ) {
+                prev = curr;
+                state++;
             }
         }
 
-        if ( s != 0 ) {
-            i = (-i) - 1;
-        }
-
-        return i;
+        return ( state == 0 ) ? i : (-i) - 1;
 
     }
 
@@ -135,82 +130,29 @@ public final class HttpProtocol extends Object {
 
     public static int parseFieldValue( byte[] src, int offsrc, char[] dst, int offdst, int len ) {
 
-        boolean failure = false;
-        int i, j, cnt;
+        boolean nonBlank = false, insertSpace = false;
         char c;
+        int i;
 
-        cnt = skipLWS( src, offsrc, len );
-        if ( cnt < 0 ) {
-            return cnt;
-        }
+        for ( i = 0; i < len; i++ ) {
 
-        for ( i = cnt, j = 0; i < len; i++ ) {
             c = (char)( 255 & src[offsrc + i] );
-            
-            if ( c == CR || c == SP || c == HT ) {
-                cnt = skipLWS( src,  );
-                if ( cnt > 0 ) {
-                    i += cnt;
-                    continue;
-                } else {
-                    break;
+
+            if ( c == ASCII_SP || c == ASCII_HT ) {
+                if ( nonBlank ) {
+                    insertSpace = true;
+                    nonBlank = false;
                 }
-            }
-            
-        }
-
-        scan:
-        for ( i = 0, j = 0; i < len; ++i ) {
-
-            c = (char)( 0xFF & src[offsrc + i] );
-
-            if ( c == CHAR_ASCII_CR || c == CHAR_ASCII_SP || c == CHAR_ASCII_HT ) {
-                cnt = skipLWS( src, offsrc + i, len - i );
-                if ( cnt > 0 ) {
-                    i += cnt;
-                    continue;
-                } else {
-                    failure = true;
-                    break scan;
-                }
-            }
-
-            lws = state & INT_STATE_MASK_LWS;
-
-            if ( lws != INT_STATE_LWS_ON && lws != INT_STATE_LWS_OFF ) {
-                if ( lws == INT_STATE_LWS_CR && c == CHAR_ASCII_LF ) {
-                    lws = INT_STATE_LWS_LF;
-                } else if ( lws == INT_STATE_LWS_LF && ( c == CHAR_ASCII_SP || c == CHAR_ASCII_HT ) ) {
-                    lws = INT_STATE_LWS_ON;
-                } else {
-                    failure = true;
-                    break scan;
-                }
-                state = (state & ~INT_STATE_MASK_LWS) | lws;
-                continue scan;
-            }
-
-            if ( c == CHAR_ASCII_SP || c == CHAR_ASCII_HT || c == CHAR_ASCII_CR ) {
-                lws = (c == CHAR_ASCII_CR) ? INT_STATE_LWS_CR : INT_STATE_LWS_ON;
-                state = (state & ~INT_STATE_MASK_LWS) | lws;
-                continue scan;
-            }
-
-            if ( c < CHAR_ASCII_SP && c != CHAR_ASCII_HT ) {
-                break;
-            }
-            if ( c == CHAR_HT || c == CHAR_SP ) {
-                state |= 0x01;
                 continue;
             }
-            if ( state == STATE
-        }
 
-        if ( failure ) {
-            j = -j;
-        }
+            if ( insertSpace ) {
+                dst[offdst++] = ASCII_SP;
+            }
 
-        return j;
+            dst[offdst++] = c;
+
+        }
 
     }
 
