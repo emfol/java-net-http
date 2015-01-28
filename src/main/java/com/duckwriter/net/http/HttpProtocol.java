@@ -52,8 +52,9 @@ public final class HttpProtocol extends Object {
         for ( i = 0; i < len; i++ ) {
             curr = (char)( 255 & buf[off + i] );
             if ( stat != 0 ) {
-                if ( prev == ASCII_CR && curr == ASCII_LF )
+                if ( prev == ASCII_CR && curr == ASCII_LF ) {
                     stat--;
+                }
                 i--;
                 break;
             } else if ( curr == ASCII_CR || curr == ASCII_LF ) {
@@ -129,8 +130,7 @@ public final class HttpProtocol extends Object {
 
     public static int parseFieldValue( byte[] src, int offsrc, char[] dst, int offdst, int len ) {
 
-        boolean failure = false, isWord = false, insertSpace = false;
-        int i, j;
+        int i, j, stat = 0;
         char c;
 
         for ( i = 0, j = 0; i < len; i++ ) {
@@ -138,29 +138,24 @@ public final class HttpProtocol extends Object {
             c = (char)( 255 & src[offsrc + i] );
 
             if ( c == ASCII_SP || c == ASCII_HT ) {
-                if ( isWord ) {
-                    insertSpace = true;
-                    isWord = false;
+                if ( (stat & 1) != 0 ) {
+                    stat = stat ^ 1 | 2;
                 }
-                continue;
-            }
-
-            if ( c < ASCII_SP || c == ASCII_DEL ) {
-                failure = true;
+            } else if ( c < ASCII_SP || c == ASCII_DEL ) {
+                stat |= 4;
                 break;
+            } else {
+                stat |= 1;
+                if ( (stat & 2) != 0 ) {
+                    dst[offdst + j++] = ASCII_SP;
+                    stat ^= 2;
+                }
+                dst[offdst + j++] = c;
             }
-
-            if ( insertSpace ) {
-                dst[offdst + j++] = ASCII_SP;
-                insertSpace = false;
-            }
-
-            isWord = true;
-            dst[offdst + j++] = c;
 
         }
 
-        if ( failure ) {
+        if ( (stat & 4) != 0 ) {
             j = (-j) - 1;
         }
 
