@@ -46,24 +46,23 @@ public final class HttpProtocol extends Object {
 
     public static int findEndOfLine( byte[] buf, int off, int len ) {
 
-        int i, state = 0;
+        int i, stat = 0;
         char prev, curr;
 
         for ( i = 0; i < len; i++ ) {
             curr = (char)( 255 & buf[off + i] );
-            if ( state != 0 ) {
-                if ( prev == ASCII_CR && curr == ASCII_LF ) {
-                    i--;
-                    state--;
-                }
+            if ( stat != 0 ) {
+                if ( prev == ASCII_CR && curr == ASCII_LF )
+                    stat--;
+                i--;
                 break;
             } else if ( curr == ASCII_CR || curr == ASCII_LF ) {
                 prev = curr;
-                state++;
+                stat++;
             }
         }
 
-        return ( state == 0 ) ? i : (-i) - 1;
+        return ( stat != 0 ) ? (-i) - 1 : i;
 
     }
 
@@ -130,29 +129,42 @@ public final class HttpProtocol extends Object {
 
     public static int parseFieldValue( byte[] src, int offsrc, char[] dst, int offdst, int len ) {
 
-        boolean nonBlank = false, insertSpace = false;
+        boolean failure = false, isWord = false, insertSpace = false;
+        int i, j;
         char c;
-        int i;
 
-        for ( i = 0; i < len; i++ ) {
+        for ( i = 0, j = 0; i < len; i++ ) {
 
             c = (char)( 255 & src[offsrc + i] );
 
             if ( c == ASCII_SP || c == ASCII_HT ) {
-                if ( nonBlank ) {
+                if ( isWord ) {
                     insertSpace = true;
-                    nonBlank = false;
+                    isWord = false;
                 }
                 continue;
             }
 
-            if ( insertSpace ) {
-                dst[offdst++] = ASCII_SP;
+            if ( c < ASCII_SP || c == ASCII_DEL ) {
+                failure = true;
+                break;
             }
 
-            dst[offdst++] = c;
+            if ( insertSpace ) {
+                dst[offdst + j++] = ASCII_SP;
+                insertSpace = false;
+            }
+
+            isWord = true;
+            dst[offdst + j++] = c;
 
         }
+
+        if ( failure ) {
+            j = (-j) - 1;
+        }
+
+        return j;
 
     }
 
