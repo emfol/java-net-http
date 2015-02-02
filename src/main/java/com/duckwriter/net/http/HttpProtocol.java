@@ -67,42 +67,6 @@ public final class HttpProtocol extends Object {
 
     }
 
-    public static int skipLWS( byte[] buf, int off, int len ) {
-
-        int i, s;
-        char c;
-
-        for ( i = 0, s = 0; i < len; ++i ) {
-
-            c = (char)( 255 & buf[off + i] );
-
-            if ( c == ASCII_HT ) {
-                c = ASCII_SP;
-            }
-
-            if ( s > 0 ) {
-                if ( (s == 2 && c != ASCII_LF) || (s == 1 && c != ASCII_SP) ) {
-                    break;
-                }
-                s--;
-            } else {
-                if ( c == ASCII_CR ) {
-                    s = 2;
-                } else if ( c != ASCII_SP ) {
-                    break;
-                }
-            }
-
-        }
-
-        if ( s != 0 || c == ASCII_LF ) {
-            i = (-i) - 1;
-        }
-
-        return i;
-
-    }
-
     public static int parseToken( byte[] src, int offsrc, char[] dst, int offdst, int len ) {
 
         final char[] sep = ASCII_SEPARATORS;
@@ -139,19 +103,23 @@ public final class HttpProtocol extends Object {
 
             if ( c == ASCII_SP || c == ASCII_HT ) {
                 if ( (stat & 1) != 0 ) {
-                    stat = stat ^ 1 | 2;
+                    stat = (stat | 2) ^ 1;
                 }
-            } else if ( c < ASCII_SP || c == ASCII_DEL ) {
+                continue;
+            }
+
+            if ( c < ASCII_SP || c == ASCII_DEL ) {
                 stat |= 4;
                 break;
-            } else {
-                stat |= 1;
-                if ( (stat & 2) != 0 ) {
-                    dst[offdst + j++] = ASCII_SP;
-                    stat ^= 2;
-                }
-                dst[offdst + j++] = c;
             }
+
+            if ( (stat & 2) != 0 ) {
+                dst[offdst + j++] = ASCII_SP;
+                stat ^= 2;
+            }
+
+            dst[offdst + j++] = c;
+            stat |= 1;
 
         }
 

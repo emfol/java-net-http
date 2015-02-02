@@ -14,8 +14,15 @@ final class HttpHeaderField extends Object {
         // initialize superclass
         super();
 
+        // check arguments
+        if ( buf == null || off < 0 || len < 2 ) {
+            throw new IllegalArgumentException(
+                "Bad Constructor Arguments For HTTP Header Field"
+            );
+        }
+
         // initialize fields
-        this.fieldContents = new char[ len ];
+        this.fieldContents = new char[len];
         this.fieldValueOffset = 0;
         this.fieldValueLength = 0;
 
@@ -27,30 +34,73 @@ final class HttpHeaderField extends Object {
     private void parse( byte[] buf, int off, int len ) throws HttpException {
 
         int cnt;
+        char sep;
 
-        // read token from buffer
+        // read token from input buffer
         cnt = HttpProtocol.parseToken( buf, off, this.fieldContents, 0, len );
-        if ( cnt < 1 || cnt >= len || buf[off + cnt] != ':' ) {
-            throw new HttpException("Bad Header Field Name");
+        if ( cnt < 1 || cnt >= len ) {
+            throw new HttpException("Bad Name For Header Field");
+        }
+
+        // check header separator
+        sep = (char)(255 & buf[off + cnt]);
+        if ( sep != ':' ) {
+            throw new HttpException("Bad Separator For Header Field");
         }
 
         // save field value offset and increment counter to skip colon
         this.fieldValueOffset = cnt++;
 
-        // count whitespaces
+        // update input offset and length
         off += cnt;
         len -= cnt;
-        cnt = HttpProtocol.countBlank( buf, off, len );
-        if ( (len -= cnt) > 0 ) {
-            off += cnt;
-            cnt = HttpProtocol.parseFieldValue(
-                buf,
-                off,
-                this.fieldContents,
-                this.fieldValueOffset,
-                len
-            );
+
+        // try to parse field value from input buffers
+        cnt = HttpProtocol.parseFieldValue(
+            buf,
+            off,
+            this.fieldContents,
+            this.fieldValueOffset,
+            len
+        );
+        if ( cnt < 0 ) {
+            throw new HttpException("Bad Value For Header Field");
         }
+
+        // save value length
+        this.fieldValueLength = cnt;
+
+    }
+
+    public void append( byte[] buf, int off, int len ) {
+
+        int i, cnt;
+        final int oldLen = this.fieldValueOffset + this.fieldValueLength;
+        final char[] oldBuf = this.fieldContents,
+            newBuf = new char[ oldLen + len + 1 ];
+
+        // copy contents
+        for ( i = 0; i < oldLen; i++ ) {
+            newBuf[i] = oldBuf[i];
+        }
+
+        // add single space character to new buffer
+        newBuf[i++] = ' ';
+
+        // try to parse field value from input buffers
+        cnt = HttpProtocol.parseFieldValue(
+            buf,
+            off,
+            newBuf,
+            i,
+            len
+        );
+        if ( cnt < 0 ) {
+            throw new HttpException("Bad Value For Header Field");
+        }
+
+        this.fieldContents = newBuf;
+        this.fieldValueLength += cnt + 1; // +1 for additional space
 
     }
 

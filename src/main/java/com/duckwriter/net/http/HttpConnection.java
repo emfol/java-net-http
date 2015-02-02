@@ -42,7 +42,7 @@ public class HttpConnection extends Object implements Closeable {
     private static final Map<String, Reference<InetAddress>> addressCache;
 
     static {
-        addressCache = new HashMap<>();
+        addressCache = new HashMap<String, Reference<InetAddress>>();
     }
 
     private final String host;
@@ -67,7 +67,7 @@ public class HttpConnection extends Object implements Closeable {
         // initialize instance variables
         this.host = host;
         this.port = port;
-        this.options = new HashMap<>();
+        this.options = new HashMap<String, Object>();
         this.socket = null;
 
     }
@@ -83,22 +83,23 @@ public class HttpConnection extends Object implements Closeable {
     private static InetAddress getHostAddress( String host )
         throws UnknownHostException {
 
-        InetAddress adr = null;
         Reference<InetAddress> ref = HttpConnection.addressCache.get( host );
-
-        if ( ref != null ) {
-            adr = ref.get();
-            if ( adr == null ) {
-                HttpConnection.addressCache.remove( host );
-            }
-        }
+        InetAddress adr = (ref != null) ? ref.get() : null;
 
         if ( adr == null ) {
+
+            // remove null reference
+            if ( ref != null ) {
+                HttpConnection.addressCache.remove( host );
+            }
+
             // dns lookup might throw UnknownHostException
             adr = InetAddress.getByName( host );
+
             // save to cache on success
-            ref = new SoftReference<>( adr );
+            ref = new SoftReference<InetAddress>( adr );
             HttpConnection.addressCache.put( host, ref );
+
         }
 
         return adr;
