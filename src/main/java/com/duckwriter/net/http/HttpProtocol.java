@@ -7,11 +7,11 @@ public final class HttpProtocol extends Object {
      */
 
     private static final char[] ASCII_SEPARATORS = {
-        0x22 /* " */, 0x28 /* ( */, 0x29 /* ) */, 0x2C /* , */, 0x2F /* / */,
-        0x3A /* : */, 0x3B /* ; */, 0x3C /* < */, 0x3D /* = */, 0x3E /* > */,
-        0x3F /* ? */, 0x40 /* @ */, 0x5B /* [ */, 0x5C /* \ */, 0x5D /* ] */,
-        0x7B /* { */, 0x7D /* } */
-    }; // + HT (0x09) + SP (0x20)
+        0x09 /* HT */, 0x20 /* SP */, 0x22 /* " */, 0x28 /* ( */, 0x29 /* ) */,
+        0x2C /* ,  */, 0x2F /* /  */, 0x3A /* : */, 0x3B /* ; */, 0x3C /* < */,
+        0x3D /* =  */, 0x3E /* >  */, 0x3F /* ? */, 0x40 /* @ */, 0x5B /* [ */,
+        0x5C /* \  */, 0x5D /* ]  */, 0x7B /* { */, 0x7D /* } */
+    };
 
     private static final char ASCII_HT  = 0x09;
     private static final char ASCII_LF  = 0x0A;
@@ -27,7 +27,7 @@ public final class HttpProtocol extends Object {
         return ( c < 0x80 );
     }
 
-    public static boolean isAlpha( final char c ) {
+    public static boolean isAlpha( char c ) {
         final char a = c | 0x20;
         return ( a > 0x60 && a < 0x7B );
     }
@@ -42,6 +42,24 @@ public final class HttpProtocol extends Object {
 
     public static boolean isLWS( char c ) {
         return ( c == ASCII_SP || c == ASCII_HT || c == ASCII_CR );
+    }
+
+    public static boolean isSeparator( char c ) {
+
+        final char[] separators = ASCII_SEPARATORS;
+        int middle, low = 0, high = separators.length - 1;
+        char selected;
+
+        while ( low <= high ) {
+            middle = low + (high - low) / 2;
+            selected = separators[middle];
+            if ( c < selected ) high = middle - 1;
+            else if ( c > selected ) low = middle + 1;
+            else return true;
+        }
+
+        return false;
+
     }
 
     public static int findEndOfLine( byte[] buf, int off, int len ) {
@@ -69,21 +87,13 @@ public final class HttpProtocol extends Object {
 
     public static int parseToken( byte[] src, int offsrc, char[] dst, int offdst, int len ) {
 
-        final char[] sep = ASCII_SEPARATORS;
-        final int seplen = sep.length;
-        int i, k;
+        int i;
         char c;
 
-        scan:
         for ( i = 0; i < len; i++ ) {
             c = (char)( 255 & src[offsrc + i] );
-            if ( c <= ASCII_SP || c >= ASCII_DEL ) {
-                break scan;
-            }
-            for ( k = 0; k < seplen; k++ ) {
-                if ( c == sep[k] ) {
-                    break scan;
-                }
+            if ( c <= ASCII_SP || c >= ASCII_DEL || isSeparator(c) ) {
+                break;
             }
             dst[offdst + i] = c;
         }
