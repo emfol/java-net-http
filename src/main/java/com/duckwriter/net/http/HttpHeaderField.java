@@ -74,17 +74,18 @@ final class HttpHeaderField extends Object {
 
     public void append( byte[] buf, int off, int len ) {
 
-        int i, cnt;
         final int oldLen = this.fieldValueOffset + this.fieldValueLength;
         final char[] oldBuf = this.fieldContents,
             newBuf = new char[ oldLen + len + 1 ];
+
+        int i, cnt;
 
         // copy contents
         for ( i = 0; i < oldLen; i++ ) {
             newBuf[i] = oldBuf[i];
         }
 
-        // add single space character to new buffer
+        // add a single space character to new buffer
         newBuf[i++] = ' ';
 
         // try to parse field value from input buffers
