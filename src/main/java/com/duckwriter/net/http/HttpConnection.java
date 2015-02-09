@@ -144,7 +144,12 @@ public class HttpConnection extends Object implements Closeable {
     }
 
     private HttpResponse receive() throws IOException {
+
+        final byte[] inputBuffer = new byte[65536];
+        final InputStream inputStream = this.socket.getInputStream();
+
         return null;
+
     }
 
     private HttpResponse request( String method, String path, InputStream data )

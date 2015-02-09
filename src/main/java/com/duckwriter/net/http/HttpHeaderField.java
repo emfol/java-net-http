@@ -1,6 +1,6 @@
 package com.duckwriter.net.http;
 
-final class HttpHeaderField extends Object {
+class HttpHeaderField extends Object {
 
     private static final int CONFIG_INITIAL_LENGTH = 80;
     private static final int CONFIG_LENGTH_INCREMENT = 32;
@@ -15,7 +15,7 @@ final class HttpHeaderField extends Object {
         super();
 
         // check arguments
-        if ( buf == null || off < 0 || len < 2 ) {
+        if ( buf == null || off < 0 || len < 1 ) {
             throw new IllegalArgumentException(
                 "Bad Constructor Arguments For HTTP Header Field"
             );
@@ -43,7 +43,7 @@ final class HttpHeaderField extends Object {
         }
 
         // check header separator
-        sep = (char)(255 & buf[off + cnt]);
+        sep = (char)( 255 & buf[off + cnt] );
         if ( sep != ':' ) {
             throw new HttpException("Bad Separator For Header Field");
         }
@@ -74,11 +74,19 @@ final class HttpHeaderField extends Object {
 
     public void append( byte[] buf, int off, int len ) {
 
-        final int oldLen = this.fieldValueOffset + this.fieldValueLength;
-        final char[] oldBuf = this.fieldContents,
-            newBuf = new char[ oldLen + len + 1 ];
+        char[] oldBuf, newBuf;
+        int i, cnt, oldLen;
 
-        int i, cnt;
+        // check arguments
+        if ( buf == null || off < 0 || len < 1 ) {
+            throw new IllegalArgumentException(
+                "Bad Arguments For Append Method Of HTTP Header Field"
+            );
+        }
+
+        oldLen = this.fieldValueOffset + this.fieldValueLength;
+        oldBuf = this.fieldContents;
+        newBuf = new char[ oldLen + len + 1 ];
 
         // copy contents
         for ( i = 0; i < oldLen; i++ ) {
@@ -97,7 +105,7 @@ final class HttpHeaderField extends Object {
             len
         );
         if ( cnt < 0 ) {
-            throw new HttpException("Bad Value For Header Field");
+            throw new HttpException("Bad Value Appended To Header Field");
         }
 
         this.fieldContents = newBuf;

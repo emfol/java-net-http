@@ -28,8 +28,7 @@ public final class HttpProtocol extends Object {
     }
 
     public static boolean isAlpha( char c ) {
-        final char a = c | 0x20;
-        return ( a > 0x60 && a < 0x7B );
+        return ( (c |= 0x20) > 0x60 && c < 0x7B );
     }
 
     public static boolean isDigit( char c ) {
@@ -37,11 +36,11 @@ public final class HttpProtocol extends Object {
     }
 
     public static boolean isControl( char c ) {
-        return ( c < 0x20 || c == 0x7F );
+        return ( c < ASCII_SP || c == ASCII_DEL );
     }
 
     public static boolean isLWS( char c ) {
-        return ( c == ASCII_SP || c == ASCII_HT || c == ASCII_CR );
+        return ( c == ASCII_SP || c == ASCII_HT || c == ASCII_LF || c == ASCII_CR );
     }
 
     public static boolean isSeparator( char c ) {
